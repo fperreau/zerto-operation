@@ -6,10 +6,22 @@ import os
 from zipfile import ZipFile
 
 billing_file = "ZertoBilling.zip"
-format_date = "%m/%d/%Y%H:%M:%S%p"
+date_format = "%m/%d/%Y%H:%M:%S%p"
 
 def browse_csv_file(file, zip_file, days, max, count):
+    """
+    Reads a CSV file containing Zerto billing data and processes it to find the maximum number of days with recorded usage.
 
+    Parameters:
+    file (file): The file to read.
+    zip_file (str): The name of the ZIP file containing the CSV file.
+    days (list): List of 33 integers where the index is the day of the month and the value is the count of days with usage.
+    max (int): The maximum number of days with recorded usage.
+    count (int): The total count of VMs.
+
+    Returns:
+    tuple: days, max, and count
+    """
     csv_days = [0]*32
     csv_max = -1
 
@@ -21,8 +33,8 @@ def browse_csv_file(file, zip_file, days, max, count):
  
     csv_count = 0
     for row in df.itertuples():
-        dFrom = dt.strptime(re.sub('[ ?]','',row.From_Date),format_date)
-        dTo = dt.strptime(re.sub('[ ?]','',row.To_Date),format_date)
+        dFrom = dt.strptime(re.sub('[ ?]','',row.From_Date),date_format)
+        dTo = dt.strptime(re.sub('[ ?]','',row.To_Date),date_format)
 
         for d in range(dFrom.day,dTo.day+1):
             days[d-1] += 1
@@ -33,7 +45,7 @@ def browse_csv_file(file, zip_file, days, max, count):
     for d in range(1,31+1):
         if csv_days[d] > csv_max: csv_max = csv_days[d]
 
-#    csv_max = max(csv_days)
+    print(max(csv_days))
  
     count += csv_count
 
@@ -45,7 +57,6 @@ def browse_csv_file(file, zip_file, days, max, count):
     return (days,max,count)
 
 def browse_zip_file(zip_file,csv_file,days,max,count):
-
     """
     Reads a ZIP file containing Zerto billing data and processes it to find the maximum number of days with recorded usage.
 
@@ -109,7 +120,7 @@ def find_max_days(zip_files,csv_file,year,month):
     for d in range(1,31+1): print(f"{days[d]: >3}", end=" ")
     print(f"|/{count}")
 
-    # os.remove(billing_file)
+    os.remove(billing_file)
 
     print(f"\nZerto usage for {month}-{year} ==> {max} {max_day}/{count}\n")
 
