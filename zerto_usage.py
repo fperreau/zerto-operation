@@ -8,7 +8,7 @@ from zipfile import ZipFile
 billing_file = "ZertoBilling.zip"
 date_format = "%m/%d/%Y%H:%M:%S%p"
 
-row = ["file", "max", "count"] + ["d"+str(i+1) for i in range(0,32-1)]
+row = ["file", "max", "count"] + ["d"+str(i+1) for i in range(0,31)]
 out = pd.DataFrame(columns=row)
 
 def browse_csv_file(file, zip_file, days, max, count):
@@ -25,7 +25,7 @@ def browse_csv_file(file, zip_file, days, max, count):
     Returns:
     tuple: days, max, and count
     """
-    csv_days = [0]*32
+    csv_days = [0]*31
     csv_max = -1
 
     df = pd.read_csv(file, skiprows=1, usecols=[" VM (Unique ID)", " From Date", " To Date", " Total Days"])
@@ -46,7 +46,7 @@ def browse_csv_file(file, zip_file, days, max, count):
 
         csv_count += 1
 
-    for d in range(1,32):
+    for d in range(1,31+1):
         if csv_days[d-1] > csv_max: csv_max = csv_days[d-1]
 
     count += csv_count
@@ -97,7 +97,7 @@ def find_max_days(zip_files,csv_file,year,month):
     None
     """
 
-    days = [0] * 32
+    days = [0] * 31
     max=-1
     max_day = []
     count = 0
@@ -107,10 +107,10 @@ def find_max_days(zip_files,csv_file,year,month):
     for zip_file in zip_files:
         (days,max,count) = browse_zip_file(zip_file,csv_file,days,max,count)
 
-    for d in range(1,32):
+    for d in range(1,31+1):
         if days[d-1] > max: max = days[d-1]
 
-    for d in range(1,32):
+    for d in range(1,31+1):
         if days[d-1] == max: max_day.append(d)
 
     os.remove(billing_file)
