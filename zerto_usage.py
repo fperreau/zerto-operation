@@ -8,6 +8,9 @@ from zipfile import ZipFile
 billing_file = "ZertoBilling.zip"
 date_format = "%m/%d/%Y%H:%M:%S%p"
 
+row = ["file", "max", "count"] + ["d"+str(i+1) for i in range(0,32-1)]
+out = pd.DataFrame(columns=row)
+
 def browse_csv_file(file, zip_file, days, max, count):
     """
     Reads a CSV file containing Zerto billing data and processes it to find the maximum number of days with recorded usage.
@@ -36,23 +39,21 @@ def browse_csv_file(file, zip_file, days, max, count):
         dFrom = dt.strptime(re.sub('[ ?]','',row.From_Date),date_format)
         dTo = dt.strptime(re.sub('[ ?]','',row.To_Date),date_format)
 
+        #print(dFrom.day,dTo.day,row.Total_Days,list(range(dFrom.day,dTo.day+1)))
         for d in range(dFrom.day,dTo.day+1):
             days[d-1] += 1
             csv_days[d-1] += 1
 
         csv_count += 1
 
-    for d in range(1,31+1):
-        if csv_days[d] > csv_max: csv_max = csv_days[d]
+    for d in range(1,32):
+        if csv_days[d-1] > csv_max: csv_max = csv_days[d-1]
 
-    print(max(csv_days))
- 
     count += csv_count
 
-    print(f"{zip_file :>35}:{csv_max: >3}|",end=" ")
-    for d in range(1,31+1): print(f"{csv_days[d]: >3}", end=" ")
-    print(f"|/{csv_count}")
-    #print(f"{zip_file: >35} : {csv_max} {csv_days}/{csv_count}")
+    row = {"file": zip_file, "max": csv_max, "count": csv_count}
+    row.update({"d"+str(index+1): element for index,element in enumerate(csv_days)})
+    out.loc[len(out)] = row
 
     return (days,max,count)
 
@@ -96,33 +97,31 @@ def find_max_days(zip_files,csv_file,year,month):
     None
     """
 
-    days = [0] * 33
+    days = [0] * 32
     max=-1
     max_day = []
     count = 0
     title = "################### Zerto CSV file"
     total = "TOTAL"
 
-    print(f"{title :<35}:   |", end=" ")
-    for d in range(1,31+1): print(f"{d: >3}", end=" ")
-    print(f"|")
-    
     for zip_file in zip_files:
         (days,max,count) = browse_zip_file(zip_file,csv_file,days,max,count)
 
-    for d in range(1,31+1):
-        if days[d] > max: max = days[d]
+    for d in range(1,32):
+        if days[d-1] > max: max = days[d-1]
 
-    for d in range(1,31+1):
-        if days[d] == max: max_day.append(d)
-
-    print(f"{total :>35}:   |", end=" ")
-    for d in range(1,31+1): print(f"{days[d]: >3}", end=" ")
-    print(f"|/{count}")
+    for d in range(1,32):
+        if days[d-1] == max: max_day.append(d)
 
     os.remove(billing_file)
 
-    print(f"\nZerto usage for {month}-{year} ==> {max} {max_day}/{count}\n")
+    row = {"file": "TOTAL", "max": max, "count": count}
+    row2 = {"d"+str(index+1): element for index,element in enumerate(days)}
+    row.update(row2)
+    out.loc[len(out)] = row
+
+    #pd.options.display.max_colwidth = 200
+    print(f"{out}\n\nZerto usage for {month}-{year} ==> {max} {max_day}/{count}\n")
 
 def main():
     """
