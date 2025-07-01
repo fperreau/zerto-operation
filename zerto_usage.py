@@ -120,8 +120,8 @@ def find_max_days(zip_files,csv_file,year,month):
     row.update(row2)
     out.loc[len(out)] = row
 
-    #pd.options.display.max_colwidth = 200
     print(f"{out}\n\nZerto usage for {month}-{year} ==> {max} {max_day}/{count}\n")
+    out.to_csv(f"{year}{month:02d}_Resiliency_France.csv",sep=';', encoding='utf-8',index=False, header=True)
 
 def main():
     """
