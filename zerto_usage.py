@@ -7,7 +7,7 @@ from zipfile import ZipFile
 
 billing_file = "ZertoBilling.zip"
 date_format = "%m/%d/%Y%H:%M:%S%p"
-out = pd.DataFrame(columns=["file", "max", "count"]+["d"+str(i+1) for i in range(0,31)])
+out = pd.DataFrame(columns=["file", "max", "count"]+["d"+str(index+1) for index in range(0,31)])
 
 def browse_csv_file(file, zip_file, days, count):
     """
