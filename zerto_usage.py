@@ -111,7 +111,7 @@ def find_max_days(zip_files,csv_file,year,month):
         if days[d-1] > max: max = days[d-1]
 
     for d in range(1,31+1):
-        if days[d-1] == max: max_day.append(d)
+        if days[d-1] == max: max_day.append("d"+str(d))
 
     os.remove(billing_file)
 
