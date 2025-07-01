@@ -7,8 +7,7 @@ from zipfile import ZipFile
 
 billing_file = "ZertoBilling.zip"
 date_format = "%m/%d/%Y%H:%M:%S%p"
-row = ["file", "max", "count"] + ["d"+str(i+1) for i in range(0,31)]
-out = pd.DataFrame(columns=row)
+out = pd.DataFrame(columns=["file", "max", "count"]+["d"+str(i+1) for i in range(0,31)])
 
 def browse_csv_file(file, zip_file, days, count):
     """
@@ -41,9 +40,8 @@ def browse_csv_file(file, zip_file, days, count):
         csv_count += 1
     count += csv_count
 
-    row = {"file": zip_file, "max": max(csv_days), "count": csv_count}
-    row.update({"d"+str(index+1): element for index,element in enumerate(csv_days)})
-    out.loc[len(out)] = row
+    out.loc[len(out)] = dict({"file": zip_file, "max": max(csv_days), "count": csv_count},
+                             **{"d"+str(index+1): element for index,element in enumerate(csv_days)})
 
     return (days,count)
 
@@ -89,8 +87,6 @@ def find_max_days(zip_files,csv_file,year,month):
     days = [0] * 31
     max_days = []
     count = 0
-    title = "################### Zerto CSV file"
-    total = "TOTAL"
 
     for zip_file in zip_files:
         (days,count) = browse_zip_file(zip_file,csv_file,days,count)
@@ -100,10 +96,8 @@ def find_max_days(zip_files,csv_file,year,month):
     for d in range(1,31+1):
         if days[d-1] == max_day: max_days.append("d"+str(d))
 
-    row = {"file": "TOTAL", "max": max_day, "count": count}
-    row2 = {"d"+str(index+1): element for index,element in enumerate(days)}
-    row.update(row2)
-    out.loc[len(out)] = row
+    out.loc[len(out)] = dict({"file": "TOTAL", "max": max_day, "count": count},
+                             **{"d"+str(index+1): element for index,element in enumerate(days)})
 
     print(f"{out}\n\nZerto usage for {month}-{year} ==> {max_day} {max_days}/{count}\n")
     out.to_csv(f"{year}{month:02d}_Resiliency_France.csv",sep=';', encoding='utf-8',index=False, header=True)
