@@ -16,9 +16,10 @@ out = pd.DataFrame(
         "pModel",
         "cpu",
         "nbUser",
-        "server",
+        "purpose",
         "license",
-        "date"
+        "date",
+        "host"
     ]
 )
 
@@ -37,21 +38,21 @@ def browse_vminfo():
 
             out.loc[len(out)] = dict({
                 "vmName": row.VM,
-                "product": "",
+                "product": "Windows Server",
                 "shared": True,
                 "version": row.vmOS,
                 "edition": "standard",
                 "pType": sr.loc[sr['Model'] == model].tProcessor.values[0],
                 "pModel": sr.loc[sr['Model'] == model].Processor.values[0],
                 "cpu": row.Cpu,
-                "nbUser": "",
-                "server":row.vmhost,
+                "nbUser": "5",
+                "purpose": row.VM[6:10],
                 "license": "spla",
-                "date": hw.loc[hw['Hostname'] == row.vmhost.split('.')[0]].iDate.values[0].strftime("%Y-%m-%d")
+                "date": hw.loc[hw['Hostname'] == row.vmhost.split('.')[0]].iDate.values[0].strftime("%Y-%m-%d"),
+                "host": row.vmhost  
             })
             
-    
-    print(out.sort_values(by=['server', 'vmName']))
+    print(out.sort_values(by=['host','vmName']))
 
 def main():
     today = dt.now()
