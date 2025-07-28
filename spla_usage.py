@@ -30,6 +30,8 @@ def browse_vminfo(file):
 
     sr=pd.DataFrame(columns=["Model", "Manufacturer", "tProcessor", "Processor"])
     sr.loc[len(sr)]=dict({"Model": "7X06-CTO1WW SR650", "Manufacturer": "Lenovo", "tProcessor": "Intel", "Processor": "Xeon"})
+    sr.loc[len(sr)]=dict({"Model": "9532-AC1 x240 M5", "Manufacturer": "Lenovo", "tProcessor": "Intel", "Processor": "Xeon"})
+    sr.loc[len(sr)]=dict({"Model": "7X16-CTO1WW SN550", "Manufacturer": "Lenovo", "tProcessor": "Intel", "Processor": "Xeon"})
 
     hw=pd.read_excel(HDC_IMPACT,sheet_name="ESX")
     hw.rename(columns={'Type / Model': 'Model'}, inplace=True)
@@ -37,7 +39,10 @@ def browse_vminfo(file):
 
     df=pd.read_excel(file,sheet_name="vmInfo")
     for row in df.itertuples():
-        if row.VM[0] == "w":
+        if row.vmOS != "" and \
+            row.PowerState == "poweredOn" and \
+            row.vmOS.split(" ")[0] == "Microsoft":
+
             model=hw.loc[hw['Hostname'] == row.vmhost.split('.')[0]].Model.values[0].strip()
 
             out.loc[len(out)] = dict({
@@ -50,7 +55,7 @@ def browse_vminfo(file):
                 "pModel": sr.loc[sr['Model'] == model].Processor.values[0],
                 "cpu": row.Cpu,
                 "nbUser": "5",
-                "purpose": row.VM[6:10],
+                "purpose": "", #row.VM[6:10],
                 "license": "spla",
                 "date": hw.loc[hw['Hostname'] == row.vmhost.split('.')[0]].iDate.values[0],
                 "host": row.vmhost  
@@ -58,10 +63,12 @@ def browse_vminfo(file):
             
 def browse_vminfo_list(vminfo_file):
     for file in vminfo_file:
+        print(file)
         browse_vminfo(file)
 #    print(out.sort_values(by=['host','vmName']))
     print(out)
-    
+    out.to_excel("spla_usage.xlsx", index=False, sheet_name="spla_usage")
+
 def main():
     today = dt.now()
     parser = ap.ArgumentParser()
