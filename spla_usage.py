@@ -5,6 +5,8 @@ import regex as re
 import os
 from zipfile import ZipFile
 
+HDC_IMPACT = "20250728_1042_HDC-Impact.xlsx"
+
 out = pd.DataFrame(
     columns=[
         "vmName",
@@ -23,15 +25,17 @@ out = pd.DataFrame(
     ]
 )
 
-def browse_vminfo():
+def browse_vminfo(file):
+    global HDC_IMPACT
+
     sr=pd.DataFrame(columns=["Model", "Manufacturer", "tProcessor", "Processor"])
     sr.loc[len(sr)]=dict({"Model": "7X06-CTO1WW SR650", "Manufacturer": "Lenovo", "tProcessor": "Intel", "Processor": "Xeon"})
 
-    hw=pd.read_excel("./vInfoTool/20250728_1042_HDC-Impact.xlsx",sheet_name="ESX")
+    hw=pd.read_excel(HDC_IMPACT,sheet_name="ESX")
     hw.rename(columns={'Type / Model': 'Model'}, inplace=True)
     hw.rename(columns={'Warranty \nStart': 'iDate'}, inplace=True)
 
-    df=pd.read_excel("./vInfoTool/20250203_0806_ypb000vcnt11.bcrs.fr_report.xlsx",sheet_name="vmInfo")
+    df=pd.read_excel(file,sheet_name="vmInfo")
     for row in df.itertuples():
         if row.VM[0] == "w":
             model=hw.loc[hw['Hostname'] == row.vmhost.split('.')[0]].Model.values[0].strip()
@@ -48,17 +52,22 @@ def browse_vminfo():
                 "nbUser": "5",
                 "purpose": row.VM[6:10],
                 "license": "spla",
-                "date": hw.loc[hw['Hostname'] == row.vmhost.split('.')[0]].iDate.values[0].strftime("%Y-%m-%d"),
+                "date": hw.loc[hw['Hostname'] == row.vmhost.split('.')[0]].iDate.values[0],
                 "host": row.vmhost  
             })
             
-    print(out.sort_values(by=['host','vmName']))
-
+def browse_vminfo_list(vminfo_file):
+    for file in vminfo_file:
+        browse_vminfo(file)
+#    print(out.sort_values(by=['host','vmName']))
+    print(out)
+    
 def main():
     today = dt.now()
     parser = ap.ArgumentParser()
+    parser.add_argument('vminfo_file', nargs='+', help='VMInfo files to process separated by space.')
     args = parser.parse_args()
-    browse_vminfo()
+    browse_vminfo_list(args.vminfo_file)
 
 if __name__ == "__main__":
     main()
