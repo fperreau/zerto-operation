@@ -1,5 +1,5 @@
 import pandas as pd
-from datetime import datetime as dt
+from datetime import datetime, timedelta
 import argparse as ap
 import regex as re
 import os
@@ -31,13 +31,31 @@ def browse_csv_file(file, zip_file, days, count):
     csv_days = [0]*31
     csv_count = 0
 
+    ## BUG: multiple entries for the same VM on the same day ##
+    # data.sort_values("VM", axis=0, ascending=True, inplace=True, na_position='last')
+    # data.sort_values("From_Date", axis=0, ascending=True, inplace=True, na_position='last')
+    #
+    cVM = ""
+    cdTo = datetime(1,1,1)
+
     for row in df.itertuples():
-        dFrom = dt.strptime(re.sub('[ ?]','',row.From_Date),date_format)
-        dTo = dt.strptime(re.sub('[ ?]','',row.To_Date),date_format)
-        for d in range(dFrom.day,dTo.day+1):
-            days[d-1] += 1
-            csv_days[d-1] += 1
-        csv_count += 1
+        dFrom = datetime.strptime(re.sub('[ ?]','',row.From_Date),date_format)
+        dTo = datetime.strptime(re.sub('[ ?]','',row.To_Date),date_format)
+        VM = row.VM_Unique_ID.strip()
+
+#        print(f"Processing {zip_file} - VM: {VM}, From: {dFrom}, To: {dTo}, Days: {row.Total_Days}", end='')
+        if (VM == cVM) and (cdTo.day == dFrom.day) :
+            dFrom += timedelta(days=1)
+        elif VM != cVM:
+            cVM = VM
+        cdTo = dTo
+#        print(f" cDays: {dTo.day-dFrom.day+1}, cVM: {cVM}, cdTo: {cdTo.day}")
+
+        if dFrom.day <= dTo.day :
+            for d in range(dFrom.day,dTo.day+1):
+                days[d-1] += 1
+                csv_days[d-1] += 1
+            csv_count += 1
     count += csv_count
 
     out.loc[len(out)] = dict({"file": zip_file, "max": max(csv_days), "count": csv_count},
@@ -112,7 +130,7 @@ def main():
     Returns:
     None
     """
-    today = dt.now()
+    today = datetime.now()
     parser = ap.ArgumentParser()
     parser.add_argument('-m', '--month', type=int, default=today.month - 1, help='Indicate the month number (1 to 12) to process.')
     parser.add_argument('-y', '--year', type=int, default=today.year, help='Indicate the year number (2025) to process.')
